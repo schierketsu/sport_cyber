@@ -121,7 +121,7 @@ class _WellnessIconTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(radiusCard),
         child: Center(
-          child: Icon(icon, size: WellnessScreen._iconSize, color: scheme.primary),
+          child: Icon(icon, size: WellnessScreen._iconSize, color: Colors.white),
         ),
       ),
     );
@@ -185,27 +185,29 @@ class _Eyes202020ScreenState extends State<Eyes202020Screen> {
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: spacingL, vertical: spacingM),
+              child: Center(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Каждые 20 минут — 20 секунд смотри вдаль на объект в 20 метрах. Снижает усталость глаз.',
-                      style: theme.textTheme.bodyMedium,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: spacingXl, vertical: spacingL),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(radiusCard),
+                      ),
+                      child: Text(
+                        '$_remaining сек',
+                        style: theme.textTheme.headlineMedium,
+                      ),
                     ),
-                    const SizedBox(height: spacingXl),
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: spacingXl, vertical: spacingL),
-                        decoration: BoxDecoration(
-                          color: scheme.surfaceContainer,
-                          borderRadius: BorderRadius.circular(radiusCard),
-                        ),
-                        child: Text(
-                          '$_remaining сек',
-                          style: theme.textTheme.headlineMedium,
-                        ),
+                    const SizedBox(height: spacingL),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: spacingL),
+                      child: Text(
+                        'Каждые 20 минут — 20 секунд смотри вдаль на объект в 20 метрах. Снижает усталость глаз.',
+                        style: theme.textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ],

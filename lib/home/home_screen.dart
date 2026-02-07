@@ -153,7 +153,7 @@ class _StartStopRow extends StatelessWidget {
           child: Row(
             children: [
               SizedBox(
-                width: 80,
+                width: 88,
                 child: Material(
                   color: scheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(radiusButton),
@@ -170,11 +170,11 @@ class _StartStopRow extends StatelessWidget {
                     },
                     borderRadius: BorderRadius.circular(radiusButton),
                     child: SizedBox(
-                      height: 56,
+                      height: 64,
                       child: Center(
                         child: Icon(
                           isActive ? Icons.stop_rounded : Icons.play_arrow_rounded,
-                          size: 36,
+                          size: 48,
                           color: scheme.onSurface,
                         ),
                       ),
@@ -192,7 +192,7 @@ class _StartStopRow extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: spacingM),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: spacingXs, vertical: spacingS),
           decoration: BoxDecoration(
@@ -450,7 +450,7 @@ class _MinimalIndicator extends StatelessWidget {
   /// Короткая подпись под HP-баром (2–3 слова по уровню).
   static String _shortLabel(BurnoutLevel level) {
     return switch (level) {
-      BurnoutLevel.green => 'Ты в потоке',
+      BurnoutLevel.green => 'Ты в потоке!',
       BurnoutLevel.yellow => 'Время отдохнуть',
       BurnoutLevel.red => 'Остановись, отдохни',
     };

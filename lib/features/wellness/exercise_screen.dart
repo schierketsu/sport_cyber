@@ -66,27 +66,29 @@ class _ExerciseScreenState extends State<ExerciseScreen> {
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: spacingL, vertical: spacingM),
+              child: Center(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      widget.description,
-                      style: theme.textTheme.bodyMedium,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: spacingXl, vertical: spacingL),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(radiusCard),
+                      ),
+                      child: Text(
+                        '$_remaining сек',
+                        style: theme.textTheme.headlineMedium,
+                      ),
                     ),
-                    const SizedBox(height: spacingXl),
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: spacingXl, vertical: spacingL),
-                        decoration: BoxDecoration(
-                          color: scheme.surfaceContainer,
-                          borderRadius: BorderRadius.circular(radiusCard),
-                        ),
-                        child: Text(
-                          '$_remaining сек',
-                          style: theme.textTheme.headlineMedium,
-                        ),
+                    const SizedBox(height: spacingL),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: spacingL),
+                      child: Text(
+                        widget.description,
+                        style: theme.textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ],

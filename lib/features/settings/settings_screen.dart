@@ -91,12 +91,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: spacingM),
                   _sectionTitle(context, 'Сегодня'),
                   const SizedBox(height: spacingS),
-                  _field('Сон (ч)', _todaySleepController, hint: '—'),
+                  _field('Спал сегодня:', _todaySleepController, hint: '—'),
                   const SizedBox(height: spacingS),
-                  _field('Перерывы', _todayBreaksController, hint: '0'),
+                  _field('Работал сегодня:', _todayBreaksController, hint: '0'),
                   const SizedBox(height: spacingL),
                   FilledButton(
                     onPressed: () => _saveAll(context),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                    ),
                     child: const Text('Сохранить'),
                   ),
                   const SizedBox(height: spacingXl),

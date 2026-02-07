@@ -179,7 +179,9 @@ class _SessionsChart extends StatelessWidget {
 
   static const double _labelHeight = 20.0;
   static const double _barGap = 4.0;
-  static const double _minBarHeight = 14.0;
+  static const double _minBarHeight = 4.0;
+  /// Высота всего контента колонки кроме графика: верхний лейбл + отступы + нижние лейблы + легенда.
+  static const double _columnOverhead = 88.0;
 
   @override
   Widget build(BuildContext context) {
@@ -197,15 +199,19 @@ class _SessionsChart extends StatelessWidget {
     final scheme = theme.colorScheme;
     final n = sessions.length;
     final double barHeight;
-    if (maxHeight != null && maxHeight! > 0) {
-      const topLabel = _labelHeight + spacingXs;
-      const bottomLabels = _labelHeight + spacingXs + spacingM + 28;
-      final forBars = maxHeight! - topLabel - bottomLabels - spacingS;
-      barHeight = ((forBars / n) - _barGap).clamp(_minBarHeight, 36.0);
+    double totalHeight;
+    double chartBoxHeight;
+    if (maxHeight != null && maxHeight! > _columnOverhead) {
+      final maxChartHeight = maxHeight! - _columnOverhead;
+      final maxBarsHeight = maxChartHeight - _labelHeight - spacingS;
+      barHeight = ((maxBarsHeight / n) - _barGap).clamp(_minBarHeight, 36.0);
+      totalHeight = n * (barHeight + _barGap) + _labelHeight + spacingS;
+      chartBoxHeight = totalHeight > maxChartHeight ? maxChartHeight : totalHeight;
     } else {
       barHeight = 28.0;
+      totalHeight = n * (barHeight + _barGap) + _labelHeight + spacingS;
+      chartBoxHeight = totalHeight;
     }
-    final totalHeight = n * (barHeight + _barGap) + _labelHeight + spacingS;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,35 +222,37 @@ class _SessionsChart extends StatelessWidget {
         ),
         const SizedBox(height: spacingXs),
         SizedBox(
-          height: totalHeight,
+          height: chartBoxHeight,
           child: LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
+              final stackHeight = totalHeight - _labelHeight;
               return Stack(
-                children: [
-                  _TimeGrid(width: width, height: totalHeight - _labelHeight),
-                  ...List.generate(sessions.length, (i) {
-                    final s = sessions[i];
-                    final y = _labelHeight + i * (barHeight + _barGap);
-                    final left = (s.startMinutes / _minutesPerDay) * width;
-                    final barWidth = (s.durationMinutes / _minutesPerDay) * width;
-                    final color = _barColor(scheme, s);
-                    return Positioned(
-                      left: left,
-                      top: y,
-                      width: barWidth.clamp(4.0, width),
-                      height: barHeight,
-                      child: Material(
-                        color: color,
-                        borderRadius: BorderRadius.circular(4),
-                        child: InkWell(
-                          onTap: () => onSessionTap(s),
+                clipBehavior: Clip.hardEdge,
+                  children: [
+                    _TimeGrid(width: width, height: stackHeight),
+                    ...List.generate(sessions.length, (i) {
+                      final s = sessions[i];
+                      final y = _labelHeight + i * (barHeight + _barGap);
+                      final left = (s.startMinutes / _minutesPerDay) * width;
+                      final barWidth = (s.durationMinutes / _minutesPerDay) * width;
+                      final color = _barColor(scheme, s);
+                      return Positioned(
+                        left: left,
+                        top: y,
+                        width: barWidth.clamp(4.0, width),
+                        height: barHeight,
+                        child: Material(
+                          color: color,
                           borderRadius: BorderRadius.circular(4),
-                          child: const SizedBox.expand(),
+                          child: InkWell(
+                            onTap: () => onSessionTap(s),
+                            borderRadius: BorderRadius.circular(4),
+                            child: const SizedBox.expand(),
+                          ),
                         ),
-                      ),
-                    );
-                  }),
+                      );
+                    }),
                 ],
               );
             },
