@@ -26,7 +26,7 @@ class WellnessScreen extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      'Выберите что размять',
+                      'Выберите что приболело',
                       style: theme.textTheme.titleMedium,
                       textAlign: TextAlign.center,
                     ),

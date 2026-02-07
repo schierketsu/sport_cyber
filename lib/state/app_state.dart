@@ -156,11 +156,13 @@ class AppState extends ChangeNotifier {
   void setTodaySleep(double hours) {
     final today = todayRecord;
     _updateDay(today.copyWith(sleepHours: hours));
+    notifyListeners();
   }
 
   void setTodayBreaks(int count) {
     final today = todayRecord;
     _updateDay(today.copyWith(breaksCount: count));
+    notifyListeners();
   }
 
   void setTodayMood(Mood mood) {

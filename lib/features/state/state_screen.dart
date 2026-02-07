@@ -73,26 +73,30 @@ class StateScreen extends StatelessWidget {
 
     showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
       backgroundColor: scheme.surfaceContainer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(radiusCard)),
       ),
       builder: (ctx) {
-        final maxContentHeight = MediaQuery.sizeOf(ctx).height * 0.4;
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            GestureDetector(
-              onTap: () => Navigator.pop(ctx),
-              behavior: HitTestBehavior.opaque,
-              child: const SizedBox(height: 28),
-            ),
-            ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: maxContentHeight),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(spacingL, 0, spacingL, spacingL),
+        final screenH = MediaQuery.sizeOf(ctx).height;
+        final maxSheetH = (screenH - 48).clamp(120.0, double.infinity);
+        final minSheetH = 200.0.clamp(0.0, maxSheetH);
+        final sheetH = (screenH * 0.6).clamp(minSheetH, maxSheetH);
+        return SizedBox(
+          height: sheetH,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(ctx),
+                behavior: HitTestBehavior.opaque,
+                child: const SizedBox(height: 12),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(spacingL, spacingXs, spacingL, spacingL),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -111,12 +115,11 @@ class StateScreen extends StatelessWidget {
                           Text('Катка', style: theme.textTheme.titleSmall),
                         ],
                       ),
-                      const SizedBox(height: spacingM),
+                      const SizedBox(height: spacingS),
                       Text(
                         'Время: ${startH.toString().padLeft(2, '0')}:${startM.toString().padLeft(2, '0')} — ${endH.toString().padLeft(2, '0')}:${endM.toString().padLeft(2, '0')}',
                         style: theme.textTheme.bodyMedium,
                       ),
-                      Text('Длительность: $durationStr', style: theme.textTheme.bodyMedium),
                       if (session.myPlaySatisfied != null)
                         Text(
                           'Ты: ${session.myPlaySatisfied! ? "👍" : "👎"}',
@@ -127,17 +130,12 @@ class StateScreen extends StatelessWidget {
                           'Команда: ${session.teamPlaySatisfied! ? "👍" : "👎"}',
                           style: theme.textTheme.bodyMedium,
                         ),
-                      if (session.mood != null)
-                        Text(
-                          'Настроение: ${_moodLabel(session.mood!)}',
-                          style: theme.textTheme.bodyMedium,
-                        ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -151,13 +149,13 @@ class StateScreen extends StatelessWidget {
     };
   }
 
+  /// Оба плохо → красный; один плохо → жёлтый; оба хорошо → зелёный (как в графике каток).
   Color _qualityColor(ColorScheme scheme, SessionRecord s) {
     final my = s.myPlaySatisfied;
     final team = s.teamPlaySatisfied;
-    final mood = s.mood;
-    if (my == false || team == false || mood == Mood.bad) return scheme.burnoutRed;
+    if (my == false && team == false) return scheme.burnoutRed;
     if (my == true && team == true) return scheme.burnoutGreen;
-    if (mood == Mood.good) return scheme.burnoutGreen;
+    if (my == false || team == false) return scheme.burnoutYellow;
     return scheme.burnoutYellow;
   }
 }
@@ -273,13 +271,13 @@ class _SessionsChart extends StatelessWidget {
     );
   }
 
+  /// Оба плохо → красный; один плохо → жёлтый; оба хорошо → зелёный.
   Color _barColor(ColorScheme scheme, SessionRecord s) {
     final my = s.myPlaySatisfied;
     final team = s.teamPlaySatisfied;
-    final mood = s.mood;
-    if (my == false || team == false || mood == Mood.bad) return scheme.burnoutRed;
+    if (my == false && team == false) return scheme.burnoutRed;
     if (my == true && team == true) return scheme.burnoutGreen;
-    if (mood == Mood.good) return scheme.burnoutGreen;
+    if (my == false || team == false) return scheme.burnoutYellow;
     return scheme.burnoutYellow;
   }
 }

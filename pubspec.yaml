@@ -29,6 +29,7 @@ flutter:
     - windows/runner/resources/yellowheart.png
     - windows/runner/resources/redheart.png
     - windows/runner/resources/deadheart.png
+    - windows/runner/resources/hp/0.png
     - windows/runner/resources/hp/1.png
     - windows/runner/resources/hp/2.png
     - windows/runner/resources/hp/3.png

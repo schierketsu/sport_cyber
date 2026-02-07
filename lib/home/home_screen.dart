@@ -12,7 +12,7 @@ import '../features/wellness/wellness_screen.dart';
 import '../features/wellness/exercise_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/state/state_screen.dart';
-import '../features/mood/mood_screen.dart';
+import '../features/book/book_screen.dart';
 
 /// Открывает экран как модальное окно на весь экран (как настройки/настроение).
 void showFullScreenModal(BuildContext context, Widget child) {
@@ -28,6 +28,50 @@ void showFullScreenModal(BuildContext context, Widget child) {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(radiusCard)),
       ),
       child: child,
+    ),
+  );
+}
+
+/// После завершения катки предлагает пользователю размяться.
+void _showWellnessOffer(BuildContext context) {
+  final theme = Theme.of(context);
+  final fillBtnStyle = FilledButton.styleFrom(
+    backgroundColor: Colors.white,
+    foregroundColor: Colors.black,
+    padding: const EdgeInsets.symmetric(horizontal: spacingM, vertical: spacingS),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusButton)),
+  );
+  showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      contentPadding: const EdgeInsets.fromLTRB(spacingXl, spacingL, spacingXl, spacingL),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Размяться?',
+            style: theme.textTheme.titleLarge,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: spacingM),
+          Text(
+            'Теперь за здоровье!',
+            style: theme.textTheme.bodyLarge,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: spacingXl),
+          Center(
+            child: FilledButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                showFullScreenModal(context, const WellnessScreen());
+              },
+              style: fillBtnStyle,
+              child: const Text('Делаем'),
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -58,10 +102,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListenableBuilder(
-        listenable: context.watch<AppState>(),
-        builder: (context, _) {
-          final appState = context.read<AppState>();
+      body: Consumer<AppState>(
+        builder: (context, appState, _) {
           if (appState.tiltDialogActive) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               showAntiTiltIfNeeded(context, appState);
@@ -216,10 +258,12 @@ class _StartStopRow extends StatelessWidget {
               ),
               const SizedBox(width: spacingXs),
               Expanded(
-                child: _MoodSingleBtn(
-                  appState: appState,
+                child: _IconBtn(
+                  icon: Icons.menu_book_rounded,
+                  tooltip: 'Гайды',
+                  onTap: () => showFullScreenModal(context, const BookScreen()),
                   minHeight: 52,
-                  onTap: () => _openMoodModal(context),
+                  iconSize: 30,
                 ),
               ),
               const SizedBox(width: spacingXs),
@@ -243,10 +287,6 @@ class _StartStopRow extends StatelessWidget {
     showFullScreenModal(context, const SettingsScreen());
   }
 
-  void _openMoodModal(BuildContext context) {
-    showFullScreenModal(context, const MoodScreen());
-  }
-
   void _showEndSessionDialog(BuildContext context) {
     bool? myPlay;
     showDialog<void>(
@@ -263,6 +303,9 @@ class _StartStopRow extends StatelessWidget {
                     teamPlaySatisfied: teamPlay,
                   );
               Navigator.pop(ctx);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted) _showWellnessOffer(context);
+              });
             }
 
             return AlertDialog(
@@ -341,62 +384,6 @@ class _StartStopRow extends StatelessWidget {
   }
 }
 
-class _MoodSingleBtn extends StatelessWidget {
-  const _MoodSingleBtn({
-    required this.appState,
-    this.minHeight = 36,
-    required this.onTap,
-  });
-
-  final AppState appState;
-  final double minHeight;
-  final VoidCallback onTap;
-
-  static const String _emoticonPath = 'windows/runner/resources/emoticon';
-  static const _emoticons = {
-    Mood.bad: '$_emoticonPath/3.png',
-    Mood.ok: '$_emoticonPath/1.png',
-    Mood.good: '$_emoticonPath/2.png',
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final current = appState.todayRecord.mood;
-    final asset = current != null ? _emoticons[current]! : '$_emoticonPath/1.png';
-    return Tooltip(
-      message: 'Настроение',
-      child: Material(
-        color: current != null
-            ? Theme.of(context).colorScheme.surfaceContainerLowest
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(radiusCard),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(radiusCard),
-          child: SizedBox(
-            height: minHeight,
-            child: Center(
-              child: Image.asset(
-                asset,
-                width: 32,
-                height: 32,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => Icon(
-                  Icons.mood_rounded,
-                  size: 28,
-                  color: current != null
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).iconTheme.color?.withValues(alpha: 0.7),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _ThumbButton extends StatelessWidget {
   const _ThumbButton({
     required this.thumbDown,
@@ -436,7 +423,12 @@ class _MinimalIndicator extends StatelessWidget {
 
   static const String _hpPath = 'windows/runner/resources/hp';
 
-  /// Уровень HP-бара: 1 = полный (зелёный), 4 = минимальный (красный).
+  /// Порог "мало спал" (часов).
+  static const double _littleSleepThreshold = 6.0;
+  /// Порог "много работал" (часов).
+  static const int _lotsOfWorkThreshold = 6;
+
+  /// Уровень HP-бара: 1 = полный (зелёный), 2–3 = средний, 4 = минимальный (красный).
   static int _hpLevel(BurnoutLevel level) {
     return switch (level) {
       BurnoutLevel.green => 1,
@@ -448,7 +440,12 @@ class _MinimalIndicator extends StatelessWidget {
   static String _hpAsset(int level) => '$_hpPath/$level.png';
 
   /// Короткая подпись под HP-баром (2–3 слова по уровню).
-  static String _shortLabel(BurnoutLevel level) {
+  static String _shortLabel(BurnoutLevel level, {
+    bool sleepWorkMedium = false,
+    bool losingStreakHigh = false,
+  }) {
+    if (losingStreakHigh) return 'Мигом отдыхать!';
+    if (sleepWorkMedium) return 'Средняя форма';
     return switch (level) {
       BurnoutLevel.green => 'Ты в потоке!',
       BurnoutLevel.yellow => 'Время отдохнуть',
@@ -456,12 +453,56 @@ class _MinimalIndicator extends StatelessWidget {
     };
   }
 
+  /// Лузстрик 1–2 → 3 HP; лузстрик > 3 → 4 HP и "Мигом отдыхать!".
+  static bool _isLosingStreakWarn(int streak) => streak >= 1 && streak <= 2;
+  static bool _isLosingStreakCritical(int streak) => streak > 3;
+
+  /// Сон < 5 часов → всегда 0 HP и "Только спать!".
+  static const double _veryLowSleepThreshold = 5.0;
+  static bool _isVeryLowSleep(DayRecord today) {
+    final sleep = today.sleepHours;
+    return sleep != null && sleep < _veryLowSleepThreshold;
+  }
+
+  /// Мало спал и много работал → среднее состояние: 3 HP, подпись "Средняя форма".
+  static bool _isSleepWorkTired(DayRecord today) {
+    final sleep = today.sleepHours;
+    if (sleep == null || sleep >= _littleSleepThreshold) return false;
+    return today.breaksCount >= _lotsOfWorkThreshold;
+  }
+
   @override
   Widget build(BuildContext context) {
     final result = appState.getBurnoutResult();
     final scheme = Theme.of(context).colorScheme;
-    final mood = appState.todayRecord.mood;
-    final hpLevel = mood == Mood.bad ? 4 : _hpLevel(result.level);
+    final today = appState.todayRecord;
+    final mood = today.mood;
+    final streak = today.losingStreak;
+    final veryLowSleep = _isVeryLowSleep(today);
+    final sleepWorkMedium = _isSleepWorkTired(today);
+    final losingCritical = _isLosingStreakCritical(streak);
+    final losingWarn = _isLosingStreakWarn(streak);
+    final int hpLevel;
+    final String label;
+    if (veryLowSleep) {
+      hpLevel = 0;
+      label = 'Только спать!';
+    } else if (losingCritical) {
+      hpLevel = 4;
+      label = _shortLabel(result.level, losingStreakHigh: true);
+    } else if (mood == Mood.bad) {
+      hpLevel = 4;
+      label = _shortLabel(BurnoutLevel.red);
+    } else if (losingWarn) {
+      hpLevel = 3;
+      label = _shortLabel(BurnoutLevel.yellow);
+    } else if (sleepWorkMedium) {
+      hpLevel = 3;
+      label = _shortLabel(result.level, sleepWorkMedium: true);
+    } else {
+      hpLevel = _hpLevel(result.level);
+      label = _shortLabel(result.level);
+    }
     const barHeight = 44.0;
 
     return Material(
@@ -488,7 +529,7 @@ class _MinimalIndicator extends StatelessWidget {
               FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  _shortLabel(mood == Mood.bad ? BurnoutLevel.red : result.level),
+                  label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
                   textAlign: TextAlign.center,
                   maxLines: 1,

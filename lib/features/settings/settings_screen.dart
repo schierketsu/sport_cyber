@@ -21,10 +21,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final appState = context.read<AppState>();
     final today = appState.todayRecord;
     _todaySleepController = TextEditingController(
-      text: today.sleepHours?.toString() ?? '',
+      text: today.sleepHours != null ? today.sleepHours!.round().toString() : '',
     );
     _todayWorkController = TextEditingController(
-      text: today.breaksCount.toString(),
+      text: today.breaksCount == 0 ? '' : today.breaksCount.toString(),
     );
   }
 
@@ -62,25 +62,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: spacingL, vertical: spacingM),
-                children: [
-                  _niceField(context, 'Спал', _todaySleepController, hint: 'часов', icon: Icons.bed_rounded),
-                  const SizedBox(height: spacingM),
-                  _niceField(context, 'Работал', _todayWorkController, hint: 'часов', icon: Icons.schedule_rounded),
-                  const SizedBox(height: spacingXl),
-                  FilledButton(
-                    onPressed: () => _saveAll(context),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: spacingM),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusButton)),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final w = constraints.maxWidth - spacingL * 2;
+                  const buttonH = 52.0;
+                  final tileAreaH = constraints.maxHeight - spacingL - buttonH - spacingL;
+                  final tileSide = tileAreaH.clamp(40.0, (w - spacingM) / 2);
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: spacingL, vertical: spacingM),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: tileSide,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _inputTile(context, _todaySleepController, icon: Icons.bed_rounded, hint: 'ч'),
+                              ),
+                              const SizedBox(width: spacingM),
+                              Expanded(
+                                child: _inputTile(context, _todayWorkController, icon: Icons.work_rounded, hint: 'ч'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: spacingL),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 44,
+                          child: FilledButton(
+                            onPressed: () => _saveAll(context),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(vertical: spacingS),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusButton)),
+                            ),
+                            child: const Text('Сохранить'),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: const Text('Сохранить'),
-                  ),
-                  const SizedBox(height: spacingXl),
-                ],
+                  );
+                },
               ),
             ),
           ],
@@ -89,26 +114,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _niceField(BuildContext context, String label, TextEditingController c, {String hint = '', required IconData icon}) {
+  Widget _inputTile(BuildContext context, TextEditingController c, {required IconData icon, String hint = 'ч'}) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Container(
+      padding: const EdgeInsets.all(spacingXs),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(radiusCard),
         border: Border.all(color: scheme.outline.withValues(alpha: 0.3), width: 1),
       ),
-      child: TextField(
-        controller: c,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        style: theme.textTheme.bodyLarge,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          prefixIcon: Icon(icon, size: 22, color: scheme.onSurfaceVariant),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: spacingL, vertical: spacingM),
-          floatingLabelBehavior: FloatingLabelBehavior.auto,
+      child: ClipRect(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 34, color: scheme.onSurfaceVariant),
+            const SizedBox(height: 2),
+            Expanded(
+              child: TextField(
+                controller: c,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleSmall,
+                decoration: InputDecoration(
+                  hintText: hint,
+                  isDense: true,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 2, vertical: 0),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -121,7 +157,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final todaySleep = double.tryParse(_todaySleepController.text.trim());
     final todayBreaks = int.tryParse(_todayWorkController.text.trim());
     if (todaySleep != null) appState.setTodaySleep(todaySleep);
-    if (todayBreaks != null) appState.setTodayBreaks(todayBreaks);
+    appState.setTodayBreaks(todayBreaks ?? 0);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Сохранено'), duration: Duration(seconds: 1)),
     );

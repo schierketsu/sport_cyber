@@ -6,7 +6,6 @@ import 'home/home_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/wellness/wellness_screen.dart';
 import 'features/state/state_screen.dart';
-import 'features/mood/mood_screen.dart';
 import 'features/wellness/pause_reminder.dart';
 
 class CyberTrainerApp extends StatelessWidget {
@@ -47,7 +46,6 @@ class CyberTrainerApp extends StatelessWidget {
           '/settings': (context) => const SettingsScreen(),
           '/wellness': (context) => const WellnessScreen(),
           '/state': (context) => const StateScreen(),
-          '/mood': (context) => const MoodScreen(),
         },
       ),
     );
