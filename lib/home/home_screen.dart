@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:window_manager/window_manager.dart';
 import '../core/models.dart';
 import '../core/theme.dart';
 import '../state/app_state.dart';
@@ -47,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
               showAntiTiltIfNeeded(context, appState);
             });
           }
-          final topInset = MediaQuery.of(context).padding.top + spacingXs;
+          final bottomInset = MediaQuery.of(context).padding.top + spacingXs;
           return Stack(
             children: [
               Column(
@@ -55,13 +57,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: SafeArea(
                       bottom: false,
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: spacingS, vertical: spacingXs),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: spacingXs, vertical: spacingXs),
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            _StartStopRow(appState: appState),
+                            if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows)
+                              DragToMoveArea(
+                                child: _StartStopRow(appState: appState),
+                              )
+                            else
+                              _StartStopRow(appState: appState),
                             if (_limitWarning(appState) != null) ...[
                               const SizedBox(height: spacingXs),
                               Text(
@@ -78,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: topInset),
+                  SizedBox(height: bottomInset),
                 ],
               ),
               if (appState.wellnessReminderVisible)
@@ -116,7 +122,7 @@ class _StartStopRow extends StatelessWidget {
     final isActive = appState.isSessionActive;
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: spacingS, vertical: spacingS),
+      padding: const EdgeInsets.symmetric(horizontal: spacingS, vertical: spacingM),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(radiusCard),
@@ -135,7 +141,7 @@ class _StartStopRow extends StatelessWidget {
                   });
                 }
               },
-              style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+              style: FilledButton.styleFrom(minimumSize: const Size(0, 56)),
               child: Text(isActive ? 'Стоп' : 'Старт'),
             ),
           ),
@@ -145,12 +151,12 @@ class _StartStopRow extends StatelessWidget {
               icon: Icons.settings_rounded,
               tooltip: 'Настройки',
               onTap: () => _openSettingsModal(context),
-              minHeight: 44,
+              minHeight: 56,
             ),
           ),
           const SizedBox(width: spacingXs),
           Expanded(
-            child: _MoodSingleBtn(appState: appState, minHeight: 44),
+            child: _MoodSingleBtn(appState: appState, minHeight: 56),
           ),
           const SizedBox(width: spacingXs),
           Expanded(
@@ -162,7 +168,7 @@ class _StartStopRow extends StatelessWidget {
                 appState.triggerTiltFromUi();
                 showAntiTiltIfNeeded(context, appState);
               },
-              minHeight: 44,
+              minHeight: 56,
             ),
           ),
         ],
@@ -379,6 +385,7 @@ class _MinimalIndicator extends StatelessWidget {
       BurnoutLevel.red => scheme.burnoutRed,
     };
 
+    const double panelHeight = 56 + spacingM * 2; // как у панели навигации (56 + vertical padding)
     return Material(
       color: scheme.surfaceContainer,
       borderRadius: BorderRadius.circular(radiusCard),
@@ -388,36 +395,42 @@ class _MinimalIndicator extends StatelessWidget {
           MaterialPageRoute<void>(builder: (_) => const StateScreen()),
         ),
         borderRadius: BorderRadius.circular(radiusCard),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: spacingM, vertical: spacingS),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _statusLabel(result.level),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: levelColor),
-                    ),
-                    const SizedBox(height: spacingXs),
-                    Text(
-                      result.recommendation,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+        child: SizedBox(
+          height: panelHeight,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: spacingS, vertical: spacingM),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image.asset(
+                  _heartAsset(result.level),
+                  width: 44,
+                  height: 44,
+                  fit: BoxFit.contain,
                 ),
-              ),
-              const SizedBox(width: spacingS),
-              Image.asset(
-                _heartAsset(result.level),
-                width: 44,
-                height: 44,
-                fit: BoxFit.contain,
-              ),
-            ],
+                const SizedBox(width: spacingS),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _statusLabel(result.level),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(color: levelColor, fontSize: 13),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        result.recommendation,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

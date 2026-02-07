@@ -17,7 +17,7 @@ void main() async {
     await windowManager.setMaximumSize(windowSize);
     await windowManager.setResizable(false);
     await windowManager.setAlwaysOnTop(true);
-    await windowManager.setTitle('КИБЕРКАЧАЛКА');
+    await windowManager.setAsFrameless();
     await windowManager.setAlignment(Alignment.bottomRight);
   }
 

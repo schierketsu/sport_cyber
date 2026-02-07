@@ -2,8 +2,27 @@
 
 #include <dwmapi.h>
 #include <flutter_windows.h>
+#include <wingdi.h>
 
 #include "resource.h"
+
+namespace {
+
+constexpr int kWindowCornerRadius = 12;
+
+void UpdateWindowRgn(HWND window) {
+  RECT rect;
+  if (!GetWindowRect(window, &rect)) return;
+  const int w = rect.right - rect.left;
+  const int h = rect.bottom - rect.top;
+  HRGN hrgn = CreateRoundRectRgn(0, 0, w, h, kWindowCornerRadius * 2,
+                                 kWindowCornerRadius * 2);
+  if (hrgn) {
+    SetWindowRgn(window, hrgn, TRUE);  // TRUE = system deletes the region
+  }
+}
+
+}  // namespace
 
 namespace {
 
@@ -14,6 +33,13 @@ namespace {
 /// See: https://docs.microsoft.com/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute
 #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
+
+#ifndef DWMWA_WINDOW_CORNER_PREFERENCE
+#define DWMWA_WINDOW_CORNER_PREFERENCE 33
+#endif
+#ifndef DWMWCP_ROUND
+#define DWMWCP_ROUND 2
 #endif
 
 constexpr const wchar_t kWindowClassName[] = L"FLUTTER_RUNNER_WIN32_WINDOW";
@@ -146,6 +172,14 @@ bool Win32Window::Create(const std::wstring& title,
 
   UpdateTheme(window);
 
+  // Rounded corners (Windows 11+)
+  DWORD corner_preference = DWMWCP_ROUND;
+  DwmSetWindowAttribute(window, DWMWA_WINDOW_CORNER_PREFERENCE,
+                        &corner_preference, sizeof(corner_preference));
+
+  // Форма окна — скруглённый прямоугольник (работает и для frameless)
+  UpdateWindowRgn(window);
+
   return OnCreate();
 }
 
@@ -198,6 +232,7 @@ Win32Window::MessageHandler(HWND hwnd,
       return 0;
     }
     case WM_SIZE: {
+      UpdateWindowRgn(hwnd);
       RECT rect = GetClientArea();
       if (child_content_ != nullptr) {
         // Size and position the child window.
