@@ -4,7 +4,9 @@ import '../../core/models.dart';
 import '../../core/theme.dart';
 import '../../state/app_state.dart';
 
-/// Полноэкранное окно «Статистика»: график каток по времени, цвет = качество, тап по столбику — детали.
+const int _minutesPerDay = 24 * 60;
+
+/// Окно «Катки за день»: график сессий по времени, тап по полоске — детали. Без переполнения, компактно.
 class StateScreen extends StatelessWidget {
   const StateScreen({super.key});
 
@@ -39,18 +41,12 @@ class StateScreen extends StatelessWidget {
               child: Consumer<AppState>(
                 builder: (context, appState, _) {
                   final today = appState.todayRecord;
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      return Padding(
-                        padding: const EdgeInsets.all(spacingM),
-                        child: _SessionsChart(
-                          date: today.date,
-                          sessions: today.sessions,
-                          maxHeight: constraints.maxHeight,
-                          onSessionTap: (session) => _showSessionDetail(context, session),
-                        ),
-                      );
-                    },
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(spacingM, 0, spacingM, spacingM),
+                    child: _SessionsChart(
+                      sessions: today.sessions,
+                      onSessionTap: (session) => _showSessionDetail(context, session),
+                    ),
                   );
                 },
               ),
@@ -77,8 +73,12 @@ class StateScreen extends StatelessWidget {
 
     showModalBottomSheet<void>(
       context: context,
+      backgroundColor: scheme.surfaceContainer,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(radiusCard)),
+      ),
       builder: (ctx) {
-        final maxContentHeight = MediaQuery.sizeOf(ctx).height * 0.35;
+        final maxContentHeight = MediaQuery.sizeOf(ctx).height * 0.4;
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -86,7 +86,7 @@ class StateScreen extends StatelessWidget {
             GestureDetector(
               onTap: () => Navigator.pop(ctx),
               behavior: HitTestBehavior.opaque,
-              child: const SizedBox(height: 32),
+              child: const SizedBox(height: 28),
             ),
             ConstrainedBox(
               constraints: BoxConstraints(maxHeight: maxContentHeight),
@@ -137,9 +137,9 @@ class StateScreen extends StatelessWidget {
                 ),
               ),
             ),
-        ],
-      );
-  },
+          ],
+        );
+      },
     );
   }
 
@@ -162,103 +162,40 @@ class StateScreen extends StatelessWidget {
   }
 }
 
-const int _minutesPerDay = 24 * 60;
-
 class _SessionsChart extends StatelessWidget {
   const _SessionsChart({
-    required this.date,
     required this.sessions,
-    this.maxHeight,
     required this.onSessionTap,
   });
 
-  final String date;
   final List<SessionRecord> sessions;
-  final double? maxHeight;
   final void Function(SessionRecord) onSessionTap;
 
-  static const double _labelHeight = 20.0;
-  static const double _barGap = 4.0;
-  static const double _minBarHeight = 4.0;
-  /// Высота всего контента колонки кроме графика: верхний лейбл + отступы + нижние лейблы + легенда.
-  static const double _columnOverhead = 88.0;
+  static const double _barGap = 3.0;
+  static const double _minBarHeight = 6.0;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     if (sessions.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: spacingXl),
-        child: Text(
-          'Пока нет каток за сегодня. Завершите сессию (Стоп), чтобы она появилась здесь.',
-          style: Theme.of(context).textTheme.bodySmall,
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(spacingL),
+          child: Text(
+            'Пока нет каток за сегодня.\nЗавершите сессию (Стоп), чтобы она появилась здесь.',
+            style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+            textAlign: TextAlign.center,
+          ),
         ),
       );
     }
 
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final n = sessions.length;
-    final double barHeight;
-    double totalHeight;
-    double chartBoxHeight;
-    if (maxHeight != null && maxHeight! > _columnOverhead) {
-      final maxChartHeight = maxHeight! - _columnOverhead;
-      final maxBarsHeight = maxChartHeight - _labelHeight - spacingS;
-      barHeight = ((maxBarsHeight / n) - _barGap).clamp(_minBarHeight, 36.0);
-      totalHeight = n * (barHeight + _barGap) + _labelHeight + spacingS;
-      chartBoxHeight = totalHeight > maxChartHeight ? maxChartHeight : totalHeight;
-    } else {
-      barHeight = 28.0;
-      totalHeight = n * (barHeight + _barGap) + _labelHeight + spacingS;
-      chartBoxHeight = totalHeight;
-    }
-
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          '0:00',
-          style: theme.textTheme.labelSmall,
-        ),
-        const SizedBox(height: spacingXs),
-        SizedBox(
-          height: chartBoxHeight,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth;
-              final stackHeight = totalHeight - _labelHeight;
-              return Stack(
-                clipBehavior: Clip.hardEdge,
-                  children: [
-                    _TimeGrid(width: width, height: stackHeight),
-                    ...List.generate(sessions.length, (i) {
-                      final s = sessions[i];
-                      final y = _labelHeight + i * (barHeight + _barGap);
-                      final left = (s.startMinutes / _minutesPerDay) * width;
-                      final barWidth = (s.durationMinutes / _minutesPerDay) * width;
-                      final color = _barColor(scheme, s);
-                      return Positioned(
-                        left: left,
-                        top: y,
-                        width: barWidth.clamp(4.0, width),
-                        height: barHeight,
-                        child: Material(
-                          color: color,
-                          borderRadius: BorderRadius.circular(4),
-                          child: InkWell(
-                            onTap: () => onSessionTap(s),
-                            borderRadius: BorderRadius.circular(4),
-                            child: const SizedBox.expand(),
-                          ),
-                        ),
-                      );
-                    }),
-                ],
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: spacingXs),
+        // Верхняя шкала времени
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -267,13 +204,68 @@ class _SessionsChart extends StatelessWidget {
             Text('24:00', style: theme.textTheme.labelSmall),
           ],
         ),
-        const SizedBox(height: spacingM),
+        const SizedBox(height: spacingXs),
+        // График — занимает всё оставшееся место, без переполнения
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final w = constraints.maxWidth;
+              final h = constraints.maxHeight;
+              final n = sessions.length;
+              final barHeight = ((h / n) - _barGap).clamp(_minBarHeight, 40.0);
+              final barAreaHeight = n * (barHeight + _barGap);
+
+              return Stack(
+                clipBehavior: Clip.hardEdge,
+                children: [
+                  // Сетка по часам
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    width: w,
+                    height: barAreaHeight,
+                    child: CustomPaint(
+                      painter: _GridPainter(),
+                      size: Size(w, barAreaHeight),
+                    ),
+                  ),
+                  // Полоски сессий
+                  ...List.generate(n, (i) {
+                    final s = sessions[i];
+                    final y = i * (barHeight + _barGap);
+                    final left = (s.startMinutes / _minutesPerDay) * w;
+                    final barW = (s.durationMinutes / _minutesPerDay) * w;
+                    final color = _barColor(scheme, s);
+                    return Positioned(
+                      left: left,
+                      top: y,
+                      width: barW.clamp(4.0, w),
+                      height: barHeight,
+                      child: Material(
+                        color: color,
+                        borderRadius: BorderRadius.circular(4),
+                        child: InkWell(
+                          onTap: () => onSessionTap(s),
+                          borderRadius: BorderRadius.circular(4),
+                          child: const SizedBox.expand(),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: spacingS),
+        // Легенда в одну строку, компактно
         Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _LegendItem(color: scheme.burnoutGreen, label: 'Хорошо'),
-            const SizedBox(width: spacingL),
+            const SizedBox(width: spacingM),
             _LegendItem(color: scheme.burnoutYellow, label: 'Норм'),
-            const SizedBox(width: spacingL),
+            const SizedBox(width: spacingM),
             _LegendItem(color: scheme.burnoutRed, label: 'Плохо'),
           ],
         ),
@@ -289,27 +281,6 @@ class _SessionsChart extends StatelessWidget {
     if (my == true && team == true) return scheme.burnoutGreen;
     if (mood == Mood.good) return scheme.burnoutGreen;
     return scheme.burnoutYellow;
-  }
-}
-
-class _TimeGrid extends StatelessWidget {
-  const _TimeGrid({required this.width, required this.height});
-
-  final double width;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      left: 0,
-      top: 0,
-      width: width,
-      height: height,
-      child: CustomPaint(
-        painter: _GridPainter(),
-        size: Size(width, height),
-      ),
-    );
   }
 }
 
@@ -342,14 +313,14 @@ class _LegendItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 12,
-          height: 12,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(width: spacingS),
+        const SizedBox(width: spacingXs),
         Text(label, style: theme.labelSmall),
       ],
     );
