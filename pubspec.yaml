@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
   provider: ^6.1.2
   shared_preferences: ^2.2.3
   flutter_local_notifications: ^17.2.3
@@ -27,3 +28,13 @@ flutter:
     - windows/runner/resources/greenheart.png
     - windows/runner/resources/yellowheart.png
     - windows/runner/resources/redheart.png
+    - windows/runner/resources/deadheart.png
+    - windows/runner/resources/hp/1.png
+    - windows/runner/resources/hp/2.png
+    - windows/runner/resources/hp/3.png
+    - windows/runner/resources/hp/4.png
+    - windows/runner/resources/button/start.png
+    - windows/runner/resources/button/stop.png
+    - windows/runner/resources/emoticon/1.png
+    - windows/runner/resources/emoticon/2.png
+    - windows/runner/resources/emoticon/3.png

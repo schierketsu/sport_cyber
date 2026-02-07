@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../state/app_state.dart';
 import '../planner/planner_settings.dart' as model;
-import '../wellness/wellness_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -54,7 +53,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appState = context.watch<AppState>();
     final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
@@ -102,47 +100,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: const Text('Сохранить'),
                   ),
                   const SizedBox(height: spacingXl),
-                  _sectionTitle(context, 'Напоминания'),
-                  const SizedBox(height: spacingS),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: spacingM, vertical: spacingS),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainer,
-                      borderRadius: BorderRadius.circular(radiusCard),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SwitchListTile(
-                          title: Text('Напоминание о паузе', style: theme.textTheme.bodyMedium),
-                          subtitle: Text(
-                            'Каждые ${appState.wellnessReminderMinutes} мин',
-                            style: theme.textTheme.labelSmall,
-                          ),
-                          value: appState.wellnessReminderEnabled,
-                          onChanged: (v) => appState.setWellnessReminderEnabled(v),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        Slider(
-                          value: appState.wellnessReminderMinutes.toDouble(),
-                          min: 10,
-                          max: 60,
-                          divisions: 5,
-                          label: '${appState.wellnessReminderMinutes} мин',
-                          onChanged: (v) => appState.setWellnessReminderMinutes(v.toInt()),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: spacingXl),
-                  OutlinedButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const WellnessScreen()),
-                    ),
-                    icon: const Icon(Icons.self_improvement, size: 20),
-                    label: const Text('Паузы и упражнения'),
-                  ),
                 ],
               ),
             ),

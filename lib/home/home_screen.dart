@@ -14,6 +14,24 @@ import '../features/settings/settings_screen.dart';
 import '../features/state/state_screen.dart';
 import '../features/mood/mood_screen.dart';
 
+/// Открывает экран как модальное окно на весь экран (как настройки/настроение).
+void showFullScreenModal(BuildContext context, Widget child) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => Container(
+      height: MediaQuery.of(context).size.height,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(radiusCard)),
+      ),
+      child: child,
+    ),
+  );
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -59,27 +77,28 @@ class _HomeScreenState extends State<HomeScreen> {
                       bottom: false,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: spacingXs, vertical: spacingXs),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows)
-                              DragToMoveArea(
-                                child: _StartStopRow(appState: appState),
-                              )
-                            else
-                              _StartStopRow(appState: appState),
-                            if (_limitWarning(appState) != null) ...[
-                              const SizedBox(height: spacingXs),
-                              Text(
-                                _limitWarning(appState)!,
-                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.error,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows)
+                                DragToMoveArea(
+                                  child: _StartStopRow(appState: appState),
+                                )
+                              else
+                                _StartStopRow(appState: appState),
+                              if (_limitWarning(appState) != null) ...[
+                                const SizedBox(height: spacingXs),
+                                Text(
+                                  _limitWarning(appState)!,
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ],
-                            const SizedBox(height: spacingXs),
-                            _MinimalIndicator(appState: appState),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -121,76 +140,111 @@ class _StartStopRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final isActive = appState.isSessionActive;
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: spacingS, vertical: spacingM),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(radiusCard),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: FilledButton(
-              onPressed: () {
-                if (isActive) {
-                  _showEndSessionDialog(context);
-                } else {
-                  appState.startSession();
-                  context.read<PauseReminder>().startSessionTimer(() {
-                    appState.requestWellnessReminder();
-                  });
-                }
-              },
-              style: FilledButton.styleFrom(minimumSize: const Size(0, 56)),
-              child: Text(isActive ? 'Стоп' : 'Старт'),
-            ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: spacingXs, vertical: spacingS),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(radiusCard),
           ),
-          const SizedBox(width: spacingXs),
-          Expanded(
-            child: _IconBtn(
-              icon: Icons.settings_rounded,
-              tooltip: 'Настройки',
-              onTap: () => _openSettingsModal(context),
-              minHeight: 56,
-            ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 80,
+                child: Material(
+                  color: scheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(radiusButton),
+                  child: InkWell(
+                    onTap: () {
+                      if (isActive) {
+                        _showEndSessionDialog(context);
+                      } else {
+                        appState.startSession();
+                        context.read<PauseReminder>().startSessionTimer(() {
+                          appState.requestWellnessReminder();
+                        });
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(radiusButton),
+                    child: SizedBox(
+                      height: 56,
+                      child: Center(
+                        child: Icon(
+                          isActive ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                          size: 36,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: spacingXs),
+              Expanded(
+                child: _MinimalIndicator(
+                  appState: appState,
+                  onTap: () => showFullScreenModal(context, const StateScreen()),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: spacingXs),
-          Expanded(
-            child: _MoodSingleBtn(appState: appState, minHeight: 56),
+        ),
+        const SizedBox(height: 2),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: spacingXs, vertical: spacingS),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(radiusCard),
           ),
-          const SizedBox(width: spacingXs),
-          Expanded(
-            child: _IconBtn(
-              icon: Icons.warning_amber_rounded,
-              tooltip: 'Тильт',
-              color: scheme.error,
-              onTap: () {
-                appState.triggerTiltFromUi();
-                showAntiTiltIfNeeded(context, appState);
-              },
-              minHeight: 56,
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _IconBtn(
+                  icon: Icons.local_fire_department_rounded,
+                  tooltip: 'Тильт',
+                  color: Colors.white,
+                  onTap: () {
+                    appState.triggerTiltFromUi();
+                    showAntiTiltIfNeeded(context, appState);
+                  },
+                  minHeight: 52,
+                  iconSize: 30,
+                ),
+              ),
+              const SizedBox(width: spacingXs),
+              Expanded(
+                child: _MoodSingleBtn(
+                  appState: appState,
+                  minHeight: 52,
+                  onTap: () => _openMoodModal(context),
+                ),
+              ),
+              const SizedBox(width: spacingXs),
+              Expanded(
+                child: _IconBtn(
+                  icon: Icons.settings_rounded,
+                  tooltip: 'Настройки',
+                  onTap: () => _openSettingsModal(context),
+                  minHeight: 52,
+                  iconSize: 30,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   void _openSettingsModal(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        height: MediaQuery.of(context).size.height,
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(radiusCard)),
-        ),
-        child: const SettingsScreen(),
-      ),
-    );
+    showFullScreenModal(context, const SettingsScreen());
+  }
+
+  void _openMoodModal(BuildContext context) {
+    showFullScreenModal(context, const MoodScreen());
   }
 
   void _showEndSessionDialog(BuildContext context) {
@@ -212,19 +266,25 @@ class _StartStopRow extends StatelessWidget {
             }
 
             return AlertDialog(
-              contentPadding: const EdgeInsets.fromLTRB(spacingL, spacingM, spacingL, spacingM),
+              contentPadding: const EdgeInsets.symmetric(horizontal: spacingXl, vertical: spacingL),
               content: ConstrainedBox(
                 constraints: BoxConstraints(maxHeight: maxContentH),
                 child: SingleChildScrollView(
                   child: myPlay == null
                       ? Column(
                           mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text('Как сыграл ты?', style: Theme.of(ctx).textTheme.titleSmall),
-                            const SizedBox(height: spacingS),
+                            Text(
+                              'Как сыграл ты?',
+                              style: Theme.of(ctx).textTheme.titleMedium,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: spacingL),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 _ThumbButton(
                                   thumbDown: true,
@@ -243,12 +303,18 @@ class _StartStopRow extends StatelessWidget {
                         )
                       : Column(
                           mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text('Как сыграла команда?', style: Theme.of(ctx).textTheme.titleSmall),
-                            const SizedBox(height: spacingS),
+                            Text(
+                              'Как сыграла команда?',
+                              style: Theme.of(ctx).textTheme.titleMedium,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: spacingL),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 _ThumbButton(
                                   thumbDown: true,
@@ -276,43 +342,52 @@ class _StartStopRow extends StatelessWidget {
 }
 
 class _MoodSingleBtn extends StatelessWidget {
-  const _MoodSingleBtn({required this.appState, this.minHeight = 36});
+  const _MoodSingleBtn({
+    required this.appState,
+    this.minHeight = 36,
+    required this.onTap,
+  });
 
   final AppState appState;
   final double minHeight;
+  final VoidCallback onTap;
 
-  static const _icons = {
-    Mood.bad: Icons.sentiment_dissatisfied_rounded,
-    Mood.ok: Icons.sentiment_neutral_rounded,
-    Mood.good: Icons.sentiment_satisfied_rounded,
+  static const String _emoticonPath = 'windows/runner/resources/emoticon';
+  static const _emoticons = {
+    Mood.bad: '$_emoticonPath/3.png',
+    Mood.ok: '$_emoticonPath/1.png',
+    Mood.good: '$_emoticonPath/2.png',
   };
 
   @override
   Widget build(BuildContext context) {
     final current = appState.todayRecord.mood;
-    final icon = current != null ? _icons[current]! : Icons.mood_rounded;
+    final asset = current != null ? _emoticons[current]! : '$_emoticonPath/1.png';
     return Tooltip(
       message: 'Настроение',
       child: Material(
         color: current != null
-            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4)
+            ? Theme.of(context).colorScheme.surfaceContainerLowest
             : Colors.transparent,
         borderRadius: BorderRadius.circular(radiusCard),
         child: InkWell(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(builder: (_) => const MoodScreen()),
-          ),
+          onTap: onTap,
           borderRadius: BorderRadius.circular(radiusCard),
           child: SizedBox(
             height: minHeight,
             child: Center(
-              child: Icon(
-                icon,
-                size: 24,
-                color: current != null
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).iconTheme.color?.withValues(alpha: 0.7),
+              child: Image.asset(
+                asset,
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.mood_rounded,
+                  size: 28,
+                  color: current != null
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).iconTheme.color?.withValues(alpha: 0.7),
+                ),
               ),
             ),
           ),
@@ -354,23 +429,30 @@ class _ThumbButton extends StatelessWidget {
 }
 
 class _MinimalIndicator extends StatelessWidget {
-  const _MinimalIndicator({required this.appState});
+  const _MinimalIndicator({required this.appState, required this.onTap});
 
   final AppState appState;
+  final VoidCallback onTap;
 
-  static String _heartAsset(BurnoutLevel level) {
+  static const String _hpPath = 'windows/runner/resources/hp';
+
+  /// Уровень HP-бара: 1 = полный (зелёный), 4 = минимальный (красный).
+  static int _hpLevel(BurnoutLevel level) {
     return switch (level) {
-      BurnoutLevel.green => 'windows/runner/resources/greenheart.png',
-      BurnoutLevel.yellow => 'windows/runner/resources/yellowheart.png',
-      BurnoutLevel.red => 'windows/runner/resources/redheart.png',
+      BurnoutLevel.green => 1,
+      BurnoutLevel.yellow => 2,
+      BurnoutLevel.red => 4,
     };
   }
 
-  static String _statusLabel(BurnoutLevel level) {
+  static String _hpAsset(int level) => '$_hpPath/$level.png';
+
+  /// Короткая подпись под HP-баром (2–3 слова по уровню).
+  static String _shortLabel(BurnoutLevel level) {
     return switch (level) {
-      BurnoutLevel.green => 'Баланс',
-      BurnoutLevel.yellow => 'Перегруз',
-      BurnoutLevel.red => 'Риск',
+      BurnoutLevel.green => 'Ты в потоке',
+      BurnoutLevel.yellow => 'Время отдохнуть',
+      BurnoutLevel.red => 'Остановись, отдохни',
     };
   }
 
@@ -378,59 +460,42 @@ class _MinimalIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final result = appState.getBurnoutResult();
     final scheme = Theme.of(context).colorScheme;
+    final mood = appState.todayRecord.mood;
+    final hpLevel = mood == Mood.bad ? 4 : _hpLevel(result.level);
+    const barHeight = 44.0;
 
-    final levelColor = switch (result.level) {
-      BurnoutLevel.green => scheme.burnoutGreen,
-      BurnoutLevel.yellow => scheme.burnoutYellow,
-      BurnoutLevel.red => scheme.burnoutRed,
-    };
-
-    const double panelHeight = 56 + spacingM * 2; // как у панели навигации (56 + vertical padding)
     return Material(
       color: scheme.surfaceContainer,
       borderRadius: BorderRadius.circular(radiusCard),
       child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(builder: (_) => const StateScreen()),
-        ),
+        onTap: onTap,
         borderRadius: BorderRadius.circular(radiusCard),
-        child: SizedBox(
-          height: panelHeight,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: spacingS, vertical: spacingM),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Image.asset(
-                  _heartAsset(result.level),
-                  width: 44,
-                  height: 44,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: spacingS, vertical: spacingS),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Image.asset(
+                  _hpAsset(hpLevel),
+                  height: barHeight,
                   fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => SizedBox(height: barHeight, width: 180),
                 ),
-                const SizedBox(width: spacingS),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _statusLabel(result.level),
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(color: levelColor, fontSize: 13),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        result.recommendation,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
+              ),
+              const SizedBox(height: spacingXs),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  _shortLabel(mood == Mood.bad ? BurnoutLevel.red : result.level),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -445,6 +510,7 @@ class _IconBtn extends StatelessWidget {
     required this.onTap,
     this.color,
     this.minHeight = 36,
+    this.iconSize = 28,
   });
 
   final IconData icon;
@@ -452,6 +518,7 @@ class _IconBtn extends StatelessWidget {
   final VoidCallback onTap;
   final Color? color;
   final double minHeight;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -465,7 +532,7 @@ class _IconBtn extends StatelessWidget {
           child: SizedBox(
             height: minHeight,
             child: Center(
-              child: Icon(icon, size: 24, color: color ?? Theme.of(context).iconTheme.color),
+              child: Icon(icon, size: iconSize, color: color ?? Theme.of(context).iconTheme.color),
             ),
           ),
         ),

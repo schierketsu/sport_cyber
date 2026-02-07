@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // Единая шкала отступов для всего приложения
 const double spacingXs = 4;
@@ -31,6 +32,7 @@ final ThemeData appDarkTheme = ThemeData(
     onSurface: Colors.white,
     surfaceContainerHighest: const Color(0xFF2C2C2C),
     surfaceContainer: const Color(0xFF1E1E1E),
+    surfaceContainerLowest: const Color(0xFF505050),
     onSurfaceVariant: Colors.white70,
     error: const Color(0xFFCF6679),
     onError: Colors.black,
@@ -41,9 +43,9 @@ final ThemeData appDarkTheme = ThemeData(
     backgroundColor: const Color(0xFF1E1E1E),
     foregroundColor: Colors.white,
     elevation: 0,
-    titleTextStyle: const TextStyle(
+    titleTextStyle: GoogleFonts.inter(
       fontSize: 18,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.bold,
       color: Colors.white,
     ),
     iconTheme: const IconThemeData(size: 22),
@@ -57,33 +59,39 @@ final ThemeData appDarkTheme = ThemeData(
   ),
   dialogTheme: DialogThemeData(
     backgroundColor: const Color(0xFF1E1E1E),
-    titleTextStyle: const TextStyle(
+    titleTextStyle: GoogleFonts.inter(
       fontSize: 18,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.bold,
       color: Colors.white,
     ),
-    contentTextStyle: const TextStyle(fontSize: 14, color: Colors.white70),
+    contentTextStyle: GoogleFonts.inter(
+      fontSize: 14,
+      fontWeight: FontWeight.bold,
+      color: Colors.white70,
+    ),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusCard)),
     actionsPadding: const EdgeInsets.fromLTRB(spacingL, 0, spacingL, spacingS),
   ),
-  textTheme: const TextTheme(
-    headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: Colors.white),
-    titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
-    titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white),
-    titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
-    bodyLarge: TextStyle(fontSize: 14, color: Colors.white),
-    bodyMedium: TextStyle(fontSize: 13, color: Colors.white70),
-    bodySmall: TextStyle(fontSize: 12, color: Colors.white54),
-    labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
-    labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70),
-    labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.white54),
+  textTheme: GoogleFonts.interTextTheme(
+    const TextTheme(
+      headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+      titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+      titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+      bodyLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+      bodyMedium: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white70),
+      bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white54),
+      labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+      labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white70),
+      labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white54),
+    ),
   ),
   filledButtonTheme: FilledButtonThemeData(
     style: FilledButton.styleFrom(
       padding: const EdgeInsets.symmetric(horizontal: spacingM, vertical: spacingS),
       minimumSize: const Size(64, 36),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusButton)),
-      textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold),
     ),
   ),
   outlinedButtonTheme: OutlinedButtonThemeData(
@@ -91,14 +99,14 @@ final ThemeData appDarkTheme = ThemeData(
       padding: const EdgeInsets.symmetric(horizontal: spacingM, vertical: spacingS),
       minimumSize: const Size(64, 36),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusButton)),
-      textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold),
     ),
   ),
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(
       padding: const EdgeInsets.symmetric(horizontal: spacingM, vertical: spacingS),
       minimumSize: const Size(48, 32),
-      textStyle: const TextStyle(fontSize: 14),
+      textStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold),
     ),
   ),
   iconButtonTheme: IconButtonThemeData(
@@ -115,16 +123,16 @@ final ThemeData appDarkTheme = ThemeData(
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusField)),
     filled: true,
     fillColor: const Color(0xFF2C2C2C),
-    labelStyle: const TextStyle(fontSize: 12, color: Colors.white54),
-    hintStyle: const TextStyle(fontSize: 13, color: Colors.white38),
+    labelStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white54),
+    hintStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white38),
   ),
   listTileTheme: ListTileThemeData(
     dense: true,
     contentPadding: const EdgeInsets.symmetric(horizontal: spacingL, vertical: 0),
     minLeadingWidth: 40,
     minVerticalPadding: 8,
-    titleTextStyle: const TextStyle(fontSize: 14, color: Colors.white),
-    subtitleTextStyle: const TextStyle(fontSize: 12, color: Colors.white54),
+    titleTextStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+    subtitleTextStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white54),
   ),
   switchTheme: SwitchThemeData(
     thumbColor: WidgetStateProperty.resolveWith((states) {

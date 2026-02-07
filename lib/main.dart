@@ -11,7 +11,7 @@ void main() async {
 
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
     await windowManager.ensureInitialized();
-    const windowSize = Size(400, 200);
+    const windowSize = Size(320, 200);
     await windowManager.setSize(windowSize);
     await windowManager.setMinimumSize(windowSize);
     await windowManager.setMaximumSize(windowSize);

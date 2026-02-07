@@ -59,18 +59,6 @@ class BurnoutIndicator {
       score += 2;
     }
 
-    // Сон
-    final sleep = today.sleepHours;
-    if (sleep != null) {
-      if (sleep < criticalSleepHours) {
-        reasons.add('сон <${criticalSleepHours.toInt()} ч');
-        score += 2;
-      } else if (sleep < minSleepHours) {
-        reasons.add('мало сна (${sleep.toStringAsFixed(1)} ч)');
-        score += 1;
-      }
-    }
-
     // Перерывы
     if (today.playHours >= 2 && today.breaksCount < minBreaksPerDay) {
       reasons.add('мало перерывов');
@@ -88,7 +76,7 @@ class BurnoutIndicator {
     }
 
     final reason = reasons.isEmpty
-        ? 'Всё в норме: сон, нагрузка и перерывы в балансе.'
+        ? 'Всё в норме: нагрузка и перерывы в балансе.'
         : reasons.join('; ');
     String recommendation;
     BurnoutLevel level;
@@ -104,7 +92,7 @@ class BurnoutIndicator {
     } else {
       level = BurnoutLevel.green;
       recommendation =
-          'Держи текущий ритм. Не забывай про перерывы и сон.';
+          'Держи текущий ритм. Не забывай про перерывы.';
     }
 
     return BurnoutResult(

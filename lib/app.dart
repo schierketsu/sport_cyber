@@ -54,13 +54,24 @@ class CyberTrainerApp extends StatelessWidget {
   }
 }
 
-/// При тильте сразу открываем «Физическая разрядка» (wellness), без промежуточного окна.
+/// При тильте сразу открываем «Физическая разрядка» (wellness) как модальное окно, как настройки.
 void showAntiTiltIfNeeded(BuildContext context, AppState appState) {
   if (!appState.tiltDialogActive) return;
   if (appState.antiTiltScreenShowing) return;
   appState.markAntiTiltScreenShowing();
   appState.dismissTiltDialog();
-  Navigator.of(context)
-      .push(MaterialPageRoute<void>(builder: (_) => const WellnessScreen()))
-      .then((_) => appState.clearAntiTiltScreenShowing());
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => Container(
+      height: MediaQuery.of(context).size.height,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(radiusCard)),
+      ),
+      child: const WellnessScreen(),
+    ),
+  ).then((_) => appState.clearAntiTiltScreenShowing());
 }
